@@ -3,3 +3,15 @@ version: '${version}'
 main: com.frontier.FrontierPlugin
 api-version: '1.21'
 description: "Project Frontier - RPG / Life / Research / Base Growth Server"
+
+commands:
+  frontier:
+    description: Project Frontier main command
+    usage: /frontier
+    aliases:
+      - pf
+
+permissions:
+  frontier.command.reload:
+    description: Allows reloading Project Frontier config
+    default: op

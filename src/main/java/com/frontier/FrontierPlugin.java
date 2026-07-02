@@ -1,12 +1,13 @@
 package com.frontier;
 
+import com.frontier.command.CommandManager;
 import com.frontier.config.ConfigManager;
 import com.frontier.core.ManagerRegistry;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Project Frontier 진입점.
- * 로직을 담지 않으며, Manager 등록과 라이프사이클 위임만 수행한다.
+ * 실제 로직은 Manager들에게 위임한다.
  */
 public final class FrontierPlugin extends JavaPlugin {
 
@@ -14,14 +15,19 @@ public final class FrontierPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+
         registry = new ManagerRegistry(this);
 
-        // ── Manager 등록 (이후 Phase에서 이 블록에만 추가하면 된다) ──
+        // Manager 등록
         registry.register(new ConfigManager(this));
+        registry.register(new CommandManager(this, registry));
 
         if (!registry.initializeAll()) {
-            getLogger().severe("초기화 실패 — 플러그인을 비활성화합니다.");
+
+            getLogger().severe("초기화 실패 - 플러그인을 비활성화합니다.");
+
             getServer().getPluginManager().disablePlugin(this);
+
             return;
         }
 
@@ -30,9 +36,11 @@ public final class FrontierPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+
         if (registry != null) {
             registry.shutdownAll();
         }
+
         getLogger().info("Project Frontier 비활성화 완료");
     }
 
