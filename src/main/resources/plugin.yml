@@ -1,0 +1,5 @@
+name: Frontier
+version: '${version}'
+main: com.frontier.FrontierPlugin
+api-version: '1.21'
+description: "Project Frontier - RPG / Life / Research / Base Growth Server"
