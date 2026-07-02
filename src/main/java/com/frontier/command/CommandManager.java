@@ -1,5 +1,6 @@
 package com.frontier.command;
 
+import com.frontier.command.commands.GuiCommand;
 import com.frontier.command.commands.HelpCommand;
 import com.frontier.command.commands.InfoCommand;
 import com.frontier.command.commands.ReloadCommand;
@@ -43,6 +44,7 @@ public final class CommandManager implements Manager, CommandExecutor, TabComple
         registerSubCommand(new HelpCommand(this));
         registerSubCommand(new InfoCommand(plugin, registry));
         registerSubCommand(new ReloadCommand(registry));
+        registerSubCommand(new GuiCommand(plugin));
 
         PluginCommand command = plugin.getCommand(ROOT_COMMAND);
         if (command == null) {
