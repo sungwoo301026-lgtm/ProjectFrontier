@@ -41,3 +41,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+# Paper test server
+run/
+
+# Windows
+Thumbs.db
