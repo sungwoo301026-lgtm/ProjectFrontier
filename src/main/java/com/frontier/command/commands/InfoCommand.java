@@ -3,6 +3,7 @@ package com.frontier.command.commands;
 import com.frontier.command.SubCommand;
 import com.frontier.config.ConfigManager;
 import com.frontier.core.ManagerRegistry;
+import com.frontier.event.ListenerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,14 +35,16 @@ public final class InfoCommand implements SubCommand {
 
     @Override
     public boolean execute(CommandSender sender, String[] args) {
-
         ConfigManager config = registry.get(ConfigManager.class);
+        ListenerManager listenerManager = registry.get(ListenerManager.class);
 
         sender.sendMessage("§6========== Project Frontier ==========");
         sender.sendMessage("§ePlugin Version §7: " + plugin.getPluginMeta().getVersion());
         sender.sendMessage("§eServer Version §7: " + Bukkit.getVersion());
         sender.sendMessage("§eJava Version §7: " + System.getProperty("java.version"));
         sender.sendMessage("§eDebug Mode §7: " + config.isDebug());
+        sender.sendMessage("§eManagers §7: " + registry.size());
+        sender.sendMessage("§eListeners §7: " + listenerManager.getListenerCount());
         sender.sendMessage("§6======================================");
 
         return true;
