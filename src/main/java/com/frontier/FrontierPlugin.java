@@ -7,6 +7,7 @@ import com.frontier.core.ManagerRegistry;
 import com.frontier.data.DataManager;
 import com.frontier.event.ListenerManager;
 import com.frontier.gui.GUIManager;
+import com.frontier.research.ResearchManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FrontierPlugin extends JavaPlugin {
@@ -20,6 +21,7 @@ public final class FrontierPlugin extends JavaPlugin {
         registry.register(new ConfigManager(this));
         registry.register(new DataManager(this, registry));
         registry.register(new BaseManager(this, registry));
+        registry.register(new ResearchManager(this, registry));
         registry.register(new CommandManager(this, registry));
         registry.register(new ListenerManager(this, registry));
         registry.register(new GUIManager(this, registry));

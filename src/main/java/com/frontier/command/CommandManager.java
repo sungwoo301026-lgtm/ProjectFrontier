@@ -7,6 +7,7 @@ import com.frontier.command.commands.InfoCommand;
 import com.frontier.command.commands.ReloadCommand;
 import com.frontier.core.Manager;
 import com.frontier.core.ManagerRegistry;
+import com.frontier.research.command.ResearchCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -47,6 +48,7 @@ public final class CommandManager implements Manager, CommandExecutor, TabComple
         registerSubCommand(new ReloadCommand(registry));
         registerSubCommand(new GuiCommand(plugin));
         registerSubCommand(new BaseCommand(registry));
+        registerSubCommand(new ResearchCommand(registry));
 
         PluginCommand command = plugin.getCommand(ROOT_COMMAND);
         if (command == null) {

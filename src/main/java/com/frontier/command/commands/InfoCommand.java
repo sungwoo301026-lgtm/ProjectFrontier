@@ -6,6 +6,7 @@ import com.frontier.config.ConfigManager;
 import com.frontier.core.ManagerRegistry;
 import com.frontier.data.DataManager;
 import com.frontier.event.ListenerManager;
+import com.frontier.research.ResearchManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -46,6 +47,7 @@ public final class InfoCommand implements SubCommand {
         ConfigManager configManager = registry.get(ConfigManager.class);
         DataManager dataManager = registry.get(DataManager.class);
         BaseManager baseManager = registry.get(BaseManager.class);
+        ResearchManager researchManager = registry.get(ResearchManager.class);
         ListenerManager listenerManager = registry.get(ListenerManager.class);
 
         sender.sendMessage("§6========== Project Frontier ==========");
@@ -65,6 +67,7 @@ public final class InfoCommand implements SubCommand {
         sender.sendMessage("§6=== Data ===");
         sender.sendMessage("§eLoaded Players §7: " + dataManager.getLoadedPlayerCount());
         sender.sendMessage("§eLoaded Bases §7: " + baseManager.getLoadedBaseCount());
+        sender.sendMessage("§eLoaded Research §7: " + researchManager.getLoadedResearchCount());
         sender.sendMessage("§eAuto Save §7: " + dataManager.getAutoSaveIntervalSeconds() + "s");
 
         sender.sendMessage("§6======================================");
