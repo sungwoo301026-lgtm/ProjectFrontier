@@ -1,5 +1,6 @@
 package com.frontier;
 
+import com.frontier.base.BaseManager;
 import com.frontier.command.CommandManager;
 import com.frontier.config.ConfigManager;
 import com.frontier.core.ManagerRegistry;
@@ -18,6 +19,7 @@ public final class FrontierPlugin extends JavaPlugin {
 
         registry.register(new ConfigManager(this));
         registry.register(new DataManager(this, registry));
+        registry.register(new BaseManager(this, registry));
         registry.register(new CommandManager(this, registry));
         registry.register(new ListenerManager(this, registry));
         registry.register(new GUIManager(this, registry));

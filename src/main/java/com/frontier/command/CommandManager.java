@@ -1,5 +1,6 @@
 package com.frontier.command;
 
+import com.frontier.base.command.BaseCommand;
 import com.frontier.command.commands.GuiCommand;
 import com.frontier.command.commands.HelpCommand;
 import com.frontier.command.commands.InfoCommand;
@@ -13,13 +14,13 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.ArrayList;
 
 public final class CommandManager implements Manager, CommandExecutor, TabCompleter {
 
@@ -45,6 +46,7 @@ public final class CommandManager implements Manager, CommandExecutor, TabComple
         registerSubCommand(new InfoCommand(plugin, registry));
         registerSubCommand(new ReloadCommand(registry));
         registerSubCommand(new GuiCommand(plugin));
+        registerSubCommand(new BaseCommand(registry));
 
         PluginCommand command = plugin.getCommand(ROOT_COMMAND);
         if (command == null) {

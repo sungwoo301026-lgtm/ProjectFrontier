@@ -1,5 +1,6 @@
 package com.frontier.command.commands;
 
+import com.frontier.base.BaseManager;
 import com.frontier.command.SubCommand;
 import com.frontier.config.ConfigManager;
 import com.frontier.core.ManagerRegistry;
@@ -35,20 +36,37 @@ public final class InfoCommand implements SubCommand {
     }
 
     @Override
+    public String getPermission() {
+        return null;
+    }
+
+    @Override
     public boolean execute(CommandSender sender, String[] args) {
-        ConfigManager config = registry.get(ConfigManager.class);
+
+        ConfigManager configManager = registry.get(ConfigManager.class);
         DataManager dataManager = registry.get(DataManager.class);
+        BaseManager baseManager = registry.get(BaseManager.class);
         ListenerManager listenerManager = registry.get(ListenerManager.class);
 
         sender.sendMessage("§6========== Project Frontier ==========");
         sender.sendMessage("§ePlugin Version §7: " + plugin.getPluginMeta().getVersion());
         sender.sendMessage("§eServer Version §7: " + Bukkit.getVersion());
         sender.sendMessage("§eJava Version §7: " + System.getProperty("java.version"));
-        sender.sendMessage("§eDebug Mode §7: " + config.isDebug());
+        sender.sendMessage("§eDebug Mode §7: " + configManager.isDebug());
+
+        sender.sendMessage("");
+
+        sender.sendMessage("§6=== Framework ===");
         sender.sendMessage("§eManagers §7: " + registry.size());
         sender.sendMessage("§eListeners §7: " + listenerManager.getListenerCount());
+
+        sender.sendMessage("");
+
+        sender.sendMessage("§6=== Data ===");
         sender.sendMessage("§eLoaded Players §7: " + dataManager.getLoadedPlayerCount());
+        sender.sendMessage("§eLoaded Bases §7: " + baseManager.getLoadedBaseCount());
         sender.sendMessage("§eAuto Save §7: " + dataManager.getAutoSaveIntervalSeconds() + "s");
+
         sender.sendMessage("§6======================================");
 
         return true;
