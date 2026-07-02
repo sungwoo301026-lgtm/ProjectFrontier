@@ -1,34 +1,30 @@
 package com.frontier.event.listeners;
 
-import com.frontier.config.ConfigManager;
+import com.frontier.data.DataManager;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.util.logging.Logger;
-
+/**
+ * 플레이어 접속/퇴장 시 데이터 로드/저장을 트리거한다.
+ */
 public final class PlayerConnectionListener implements Listener {
 
-    private final Logger logger;
-    private final ConfigManager configManager;
+    private final DataManager dataManager;
 
-    public PlayerConnectionListener(Logger logger, ConfigManager configManager) {
-        this.logger = logger;
-        this.configManager = configManager;
+    public PlayerConnectionListener(DataManager dataManager) {
+        this.dataManager = dataManager;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        if (configManager.isDebug()) {
-            logger.info("[Debug] Player joined: " + event.getPlayer().getName());
-        }
+        dataManager.loadPlayer(event.getPlayer());
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
-        if (configManager.isDebug()) {
-            logger.info("[Debug] Player quit: " + event.getPlayer().getName());
-        }
+        dataManager.savePlayer(event.getPlayer());
     }
 }

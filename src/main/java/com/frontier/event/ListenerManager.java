@@ -3,6 +3,7 @@ package com.frontier.event;
 import com.frontier.config.ConfigManager;
 import com.frontier.core.Manager;
 import com.frontier.core.ManagerRegistry;
+import com.frontier.data.DataManager;
 import com.frontier.event.listeners.BlockInteractionListener;
 import com.frontier.event.listeners.PlayerConnectionListener;
 import org.bukkit.event.HandlerList;
@@ -32,9 +33,10 @@ public final class ListenerManager implements Manager {
     @Override
     public void initialize() {
         ConfigManager configManager = registry.get(ConfigManager.class);
+        DataManager dataManager = registry.get(DataManager.class);
         Logger logger = plugin.getLogger();
 
-        registerListener(new PlayerConnectionListener(logger, configManager));
+        registerListener(new PlayerConnectionListener(dataManager));
         registerListener(new BlockInteractionListener(logger, configManager));
     }
 

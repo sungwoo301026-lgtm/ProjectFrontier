@@ -10,7 +10,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class ConfigManager implements Manager {
 
     private final JavaPlugin plugin;
+
     private boolean debug;
+    private int autoSaveIntervalSeconds;
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -23,7 +25,7 @@ public final class ConfigManager implements Manager {
 
     @Override
     public void initialize() {
-        plugin.saveDefaultConfig(); // plugins/Frontier/config.yml이 없을 때만 생성
+        plugin.saveDefaultConfig();
         reload();
     }
 
@@ -34,11 +36,18 @@ public final class ConfigManager implements Manager {
 
     public void reload() {
         plugin.reloadConfig();
+
         FileConfiguration config = plugin.getConfig();
+
         this.debug = config.getBoolean("debug", false);
+        this.autoSaveIntervalSeconds = config.getInt("data.auto-save-interval-seconds", 300);
     }
 
     public boolean isDebug() {
         return debug;
+    }
+
+    public int getAutoSaveIntervalSeconds() {
+        return autoSaveIntervalSeconds;
     }
 }

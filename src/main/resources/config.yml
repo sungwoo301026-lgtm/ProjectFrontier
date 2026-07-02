@@ -1,1 +1,5 @@
-debug: true
+# Project Frontier 전역 설정
+debug: false
+
+data:
+  auto-save-interval-seconds: 300
