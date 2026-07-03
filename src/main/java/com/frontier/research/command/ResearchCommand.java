@@ -2,8 +2,8 @@ package com.frontier.research.command;
 
 import com.frontier.command.SubCommand;
 import com.frontier.core.ManagerRegistry;
-import com.frontier.research.PlayerResearchGUI;
 import com.frontier.research.ResearchData;
+import com.frontier.research.ResearchLabGUI;
 import com.frontier.research.ResearchManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -11,8 +11,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * /frontier research
- * 연구 GUI를 연다. (플레이어 전용)
+ * /frontier research — 개발용 테스트 명령.
+ * 연구소 GUI(첫 화면)를 연다. GUI 로직은 명령에 의존하지 않는다.
  */
 public final class ResearchCommand implements SubCommand {
 
@@ -29,7 +29,7 @@ public final class ResearchCommand implements SubCommand {
 
     @Override
     public String getDescription() {
-        return "연구 목록을 엽니다.";
+        return "연구소를 엽니다. (개발용)";
     }
 
     @Override
@@ -58,7 +58,7 @@ public final class ResearchCommand implements SubCommand {
         data.setLastOpened(System.currentTimeMillis());
         researchManager.saveResearch(data);
 
-        new PlayerResearchGUI(data, researchManager).open(player);
+        new ResearchLabGUI(data, researchManager).open(player);
         return true;
     }
 }
