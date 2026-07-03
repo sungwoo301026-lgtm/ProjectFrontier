@@ -11,12 +11,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.File;
+
 public final class DataManager implements Manager {
 
     private final JavaPlugin plugin;
     private final ManagerRegistry registry;
 
     private ConfigManager configManager;
+    private DataStore dataStore;
     private PlayerDataRepository playerDataRepository;
     private BukkitTask autoSaveTask;
     private int autoSaveIntervalSeconds;
@@ -33,10 +36,15 @@ public final class DataManager implements Manager {
 
     @Override
     public void initialize() {
-        configManager = registry.get(ConfigManager.class);
+        this.configManager = registry.get(ConfigManager.class);
 
-        YamlDataStore dataStore = new YamlDataStore(plugin);
-        playerDataRepository = new PlayerDataRepository(dataStore);
+        File playersFolder = new File(plugin.getDataFolder(), "data/players");
+        if (!playersFolder.exists() && !playersFolder.mkdirs()) {
+            throw new IllegalStateException("데이터 폴더 생성 실패: " + playersFolder.getPath());
+        }
+
+        this.dataStore = new YamlDataStore(plugin);
+        this.playerDataRepository = new PlayerDataRepository(dataStore);
 
         startAutoSaveTask();
     }
@@ -48,37 +56,39 @@ public final class DataManager implements Manager {
             autoSaveTask = null;
         }
 
-        saveAllOnlinePlayers();
-
-        if (configManager != null && configManager.isDebug()) {
-            plugin.getLogger().info("[Debug] DataManager 종료 저장 완료");
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            PlayerData data = playerDataRepository.getLoaded(player.getUniqueId());
+            if (data != null) {
+                data.setLastSeen(System.currentTimeMillis());
+            }
         }
+
+        playerDataRepository.saveAllLoaded();
+        plugin.getLogger().info("[Data] 온라인 플레이어 데이터 저장 완료");
     }
 
     private void startAutoSaveTask() {
-        autoSaveIntervalSeconds = configManager.getAutoSaveIntervalSeconds();
+        this.autoSaveIntervalSeconds = configManager.getAutoSaveIntervalSeconds();
+        long intervalTicks = autoSaveIntervalSeconds * 20L;
 
-        long intervalTicks = Math.max(20L, autoSaveIntervalSeconds * 20L);
-
-        autoSaveTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            saveAllOnlinePlayers();
+        this.autoSaveTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            playerDataRepository.saveAllLoaded();
 
             if (configManager.isDebug()) {
                 plugin.getLogger().info("[Debug] Auto-save 완료: "
                         + playerDataRepository.getLoadedCount() + "명");
             }
-
         }, intervalTicks, intervalTicks);
     }
 
     public void loadPlayer(Player player) {
         PlayerData data = playerDataRepository.loadOrCreate(player);
+        data.setName(player.getName());
 
         if (configManager.isDebug()) {
-            plugin.getLogger().info("[Debug] PlayerData 로드: "
-                    + data.getName()
-                    + " level="
-                    + data.getLevel());
+            plugin.getLogger().info("[Debug] PlayerData 로드: " + player.getName()
+                    + " (gold=" + data.getGold()
+                    + ", tutorial=" + data.isTutorialCompleted() + ")");
         }
     }
 
@@ -99,14 +109,6 @@ public final class DataManager implements Manager {
     }
 
     public void saveAllOnlinePlayers() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            PlayerData data = playerDataRepository.getLoaded(player.getUniqueId());
-
-            if (data != null) {
-                data.setLastSeen(System.currentTimeMillis());
-            }
-        }
-
         playerDataRepository.saveAllLoaded();
     }
 
@@ -114,11 +116,15 @@ public final class DataManager implements Manager {
         return playerDataRepository;
     }
 
-    public int getLoadedPlayerCount() {
-        return playerDataRepository.getLoadedCount();
+    public DataStore getDataStore() {
+        return dataStore;
     }
 
     public int getAutoSaveIntervalSeconds() {
         return autoSaveIntervalSeconds;
+    }
+
+    public int getLoadedPlayerCount() {
+        return playerDataRepository.getLoadedCount();
     }
 }

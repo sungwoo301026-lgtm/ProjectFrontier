@@ -2,7 +2,6 @@ package com.frontier.research;
 
 import com.frontier.data.DataStore;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,80 +12,103 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * ResearchData를 YAML 파일로 저장하는 DataStore 구현체.
+ * ResearchData 전용 YAML 저장소.
+ * 경로: plugins/Frontier/data/research/<uuid>.yml
+ *
+ * v2에서 end-times 섹션 추가.
+ * v1 파일(end-times 없음)도 안전하게 로드된다.
  */
 public final class ResearchYamlDataStore implements DataStore<ResearchData, UUID> {
 
-    private final File researchFolder;
+    private final File folder;
 
     public ResearchYamlDataStore(JavaPlugin plugin) {
-        this.researchFolder = new File(plugin.getDataFolder(), "data/research");
-
-        if (!researchFolder.exists()) {
-            researchFolder.mkdirs();
+        this.folder = new File(plugin.getDataFolder(), "data/research");
+        if (!folder.exists() && !folder.mkdirs()) {
+            throw new IllegalStateException("연구 데이터 폴더 생성 실패: " + folder.getPath());
         }
     }
 
-    private File getResearchFile(UUID uuid) {
-        return new File(researchFolder, uuid + ".yml");
+    private File getFile(UUID id) {
+        return new File(folder, id + ".yml");
     }
 
     @Override
-    public ResearchData load(UUID uuid) throws IOException {
-        File file = getResearchFile(uuid);
-
+    public ResearchData load(UUID id) throws IOException {
+        File file = getFile(id);
         if (!file.exists()) {
             return null;
         }
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
 
-        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("data-version", config.getInt("data-version", 1));
-        map.put("created-at", config.getLong("created-at"));
-        map.put("last-opened", config.getLong("last-opened"));
-
-        ConfigurationSection statesSection = config.getConfigurationSection("states");
-        Map<String, Object> states = new LinkedHashMap<>();
-
-        if (statesSection != null) {
-            for (String key : statesSection.getKeys(false)) {
-                states.put(key, statesSection.getString(key));
+        Map<String, ResearchState> states = new LinkedHashMap<>();
+        ConfigurationSection stateSection = yaml.getConfigurationSection("states");
+        if (stateSection != null) {
+            for (String key : stateSection.getKeys(false)) {
+                ResearchState state = parseState(stateSection.getString(key));
+                if (state != null) {
+                    states.put(key, state);
+                }
             }
         }
 
-        map.put("states", states);
+        Map<String, Long> endTimes = new LinkedHashMap<>();
+        ConfigurationSection endSection = yaml.getConfigurationSection("end-times");
+        if (endSection != null) {
+            for (String key : endSection.getKeys(false)) {
+                endTimes.put(key, endSection.getLong(key, 0L));
+            }
+        }
 
-        return ResearchData.fromMap(uuid, map);
+        return new ResearchData(
+                id,
+                states,
+                endTimes,
+                yaml.getLong("created-at", 0L),
+                yaml.getLong("last-opened", 0L),
+                ResearchData.CURRENT_DATA_VERSION
+        );
     }
 
     @Override
     public void save(ResearchData data) throws IOException {
-        File file = getResearchFile(data.getPlayer());
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("data-version", data.getDataVersion());
+        yaml.set("created-at", data.getCreatedAt());
+        yaml.set("last-opened", data.getLastOpened());
 
-        FileConfiguration config = new YamlConfiguration();
+        for (Map.Entry<String, ResearchState> entry : data.getAllStates().entrySet()) {
+            yaml.set("states." + entry.getKey(), entry.getValue().name());
+        }
+        for (Map.Entry<String, Long> entry : data.getAllEndTimes().entrySet()) {
+            yaml.set("end-times." + entry.getKey(), entry.getValue());
+        }
 
-        Map<String, Object> map = data.toMap();
-
-        config.set("data-version", map.get("data-version"));
-        config.set("created-at", map.get("created-at"));
-        config.set("last-opened", map.get("last-opened"));
-        config.set("states", map.get("states"));
-
-        config.save(file);
+        yaml.save(getFile(data.getPlayer()));
     }
 
     @Override
-    public boolean exists(UUID uuid) {
-        return getResearchFile(uuid).exists();
+    public boolean exists(UUID id) {
+        return getFile(id).exists();
     }
 
     @Override
-    public void delete(UUID uuid) throws IOException {
-        File file = getResearchFile(uuid);
+    public void delete(UUID id) throws IOException {
+        File file = getFile(id);
+        if (file.exists() && !file.delete()) {
+            throw new IOException("연구 데이터 삭제 실패: " + file.getPath());
+        }
+    }
 
-        if (file.exists()) {
-            file.delete();
+    /** 알 수 없는 상태 문자열은 무시 (구버전/수동편집 안전장치) */
+    private ResearchState parseState(String name) {
+        if (name == null) {
+            return null;
+        }
+        try {
+            return ResearchState.valueOf(name);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 }

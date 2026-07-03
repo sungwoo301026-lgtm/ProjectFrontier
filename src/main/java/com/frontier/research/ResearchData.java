@@ -6,46 +6,41 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 플레이어별 연구 데이터.
- * 실제 연구 정의는 나중에 별도 Registry/YAML로 분리하고,
- * 이 클래스는 "플레이어가 어떤 연구를 어떤 상태로 갖고 있는지"만 저장한다.
+ * 플레이어별 연구 데이터 모델 (순수 데이터, 직렬화는 ResearchYamlDataStore 담당).
+ *
+ * dataVersion 2:
+ * - endTimes 추가 (RESEARCHING 상태 연구의 완료 예정 시각, epoch ms)
  */
 public final class ResearchData {
 
-    private static final int CURRENT_DATA_VERSION = 1;
+    public static final int CURRENT_DATA_VERSION = 2;
 
     private final UUID player;
-    private int dataVersion;
     private final Map<String, ResearchState> states;
+    private final Map<String, Long> endTimes;
     private final long createdAt;
     private long lastOpened;
+    private final int dataVersion;
 
-    public ResearchData(
-            UUID player,
-            int dataVersion,
-            Map<String, ResearchState> states,
-            long createdAt,
-            long lastOpened
-    ) {
+    public ResearchData(UUID player, Map<String, ResearchState> states, Map<String, Long> endTimes,
+                        long createdAt, long lastOpened, int dataVersion) {
         this.player = player;
-        this.dataVersion = dataVersion;
         this.states = new ConcurrentHashMap<>(states);
+        this.endTimes = new ConcurrentHashMap<>(endTimes);
         this.createdAt = createdAt;
         this.lastOpened = lastOpened;
+        this.dataVersion = dataVersion;
     }
 
+    /** 신규 플레이어용 초기 데이터 생성 */
     public static ResearchData createNew(UUID player) {
         long now = System.currentTimeMillis();
-
-        return new ResearchData(
-                player,
-                CURRENT_DATA_VERSION,
-                Map.of(),
-                now,
-                now
-        );
+        return new ResearchData(player, Map.of(), Map.of(), now, now, CURRENT_DATA_VERSION);
     }
 
+    // ── 상태 조회/변경 ──
+
+    /** 해당 연구의 상태. 기록이 없으면 NOT_STARTED. */
     public ResearchState getState(String researchId) {
         return states.getOrDefault(researchId, ResearchState.NOT_STARTED);
     }
@@ -54,76 +49,48 @@ public final class ResearchData {
         states.put(researchId, state);
     }
 
+    /** 완료 예정 시각(epoch ms). 없으면 0. */
+    public long getEndTime(String researchId) {
+        return endTimes.getOrDefault(researchId, 0L);
+    }
+
+    public void setEndTime(String researchId, long endTime) {
+        endTimes.put(researchId, endTime);
+    }
+
+    public void clearEndTime(String researchId) {
+        endTimes.remove(researchId);
+    }
+
+    /** RESEARCHING 상태인 연구의 (ID → 완료 예정 시각) 복사본. 완료 판정용. */
+    public Map<String, Long> getResearchingEndTimes() {
+        Map<String, Long> result = new LinkedHashMap<>();
+        for (Map.Entry<String, ResearchState> entry : states.entrySet()) {
+            if (entry.getValue() == ResearchState.RESEARCHING) {
+                result.put(entry.getKey(), getEndTime(entry.getKey()));
+            }
+        }
+        return result;
+    }
+
+    /** 직렬화용 상태 복사본 (ResearchYamlDataStore가 사용) */
+    public Map<String, ResearchState> getAllStates() {
+        return new LinkedHashMap<>(states);
+    }
+
+    /** 직렬화용 종료시각 복사본 (ResearchYamlDataStore가 사용) */
+    public Map<String, Long> getAllEndTimes() {
+        return new LinkedHashMap<>(endTimes);
+    }
+
     public int getTrackedCount() {
         return states.size();
     }
 
-    public Map<String, Object> toMap() {
-        Map<String, Object> map = new LinkedHashMap<>();
-
-        map.put("data-version", dataVersion);
-        map.put("created-at", createdAt);
-        map.put("last-opened", lastOpened);
-
-        Map<String, Object> stateMap = new LinkedHashMap<>();
-        for (Map.Entry<String, ResearchState> entry : states.entrySet()) {
-            stateMap.put(entry.getKey(), entry.getValue().name());
-        }
-
-        map.put("states", stateMap);
-
-        return map;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static ResearchData fromMap(UUID player, Map<String, Object> map) {
-        Map<String, ResearchState> loadedStates = new LinkedHashMap<>();
-
-        Object rawStates = map.get("states");
-        if (rawStates instanceof Map<?, ?> stateMap) {
-            for (Map.Entry<?, ?> entry : stateMap.entrySet()) {
-                ResearchState state = parseState(String.valueOf(entry.getValue()));
-                if (state != null) {
-                    loadedStates.put(String.valueOf(entry.getKey()), state);
-                }
-            }
-        }
-
-        return new ResearchData(
-                player,
-                toInt(map.get("data-version"), CURRENT_DATA_VERSION),
-                loadedStates,
-                toLong(map.get("created-at")),
-                toLong(map.get("last-opened"))
-        );
-    }
-
-    private static ResearchState parseState(String name) {
-        try {
-            return ResearchState.valueOf(name);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    private static long toLong(Object value) {
-        return (value instanceof Number number) ? number.longValue() : 0L;
-    }
-
-    private static int toInt(Object value, int defaultValue) {
-        return (value instanceof Number number) ? number.intValue() : defaultValue;
-    }
+    // ── Getter / Setter ──
 
     public UUID getPlayer() {
         return player;
-    }
-
-    public int getDataVersion() {
-        return dataVersion;
-    }
-
-    public void setDataVersion(int dataVersion) {
-        this.dataVersion = dataVersion;
     }
 
     public long getCreatedAt() {
@@ -136,5 +103,9 @@ public final class ResearchData {
 
     public void setLastOpened(long lastOpened) {
         this.lastOpened = lastOpened;
+    }
+
+    public int getDataVersion() {
+        return dataVersion;
     }
 }

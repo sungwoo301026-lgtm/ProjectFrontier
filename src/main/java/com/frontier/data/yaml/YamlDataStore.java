@@ -10,9 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
-/**
- * PlayerData를 YAML 파일로 저장하는 DataStore 구현체.
- */
 public final class YamlDataStore implements DataStore<PlayerData, UUID> {
 
     private final File playerFolder;
@@ -31,7 +28,6 @@ public final class YamlDataStore implements DataStore<PlayerData, UUID> {
 
     @Override
     public PlayerData load(UUID uuid) throws IOException {
-
         File file = getPlayerFile(uuid);
 
         if (!file.exists()) {
@@ -42,29 +38,27 @@ public final class YamlDataStore implements DataStore<PlayerData, UUID> {
 
         return new PlayerData(
                 uuid,
-                config.getInt("data-version", 1),
                 config.getString("name", "Unknown"),
                 config.getLong("first-join"),
                 config.getLong("last-seen"),
-                config.getInt("level", 1),
-                config.getLong("experience", 0)
+                config.getLong("gold", 0L),
+                config.getBoolean("tutorial-completed", false),
+                PlayerData.CURRENT_DATA_VERSION
         );
     }
 
     @Override
     public void save(PlayerData data) throws IOException {
-
         File file = getPlayerFile(data.getUuid());
 
         FileConfiguration config = new YamlConfiguration();
 
         config.set("data-version", data.getDataVersion());
-        config.set("uuid", data.getUuid().toString());
         config.set("name", data.getName());
         config.set("first-join", data.getFirstJoin());
         config.set("last-seen", data.getLastSeen());
-        config.set("level", data.getLevel());
-        config.set("experience", data.getExperience());
+        config.set("gold", data.getGold());
+        config.set("tutorial-completed", data.isTutorialCompleted());
 
         config.save(file);
     }
@@ -76,7 +70,6 @@ public final class YamlDataStore implements DataStore<PlayerData, UUID> {
 
     @Override
     public void delete(UUID uuid) throws IOException {
-
         File file = getPlayerFile(uuid);
 
         if (file.exists()) {

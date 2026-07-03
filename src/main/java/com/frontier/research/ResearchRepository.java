@@ -10,41 +10,28 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ResearchData 저장소.
+ * 캐시(Map) + DataStore<ResearchData, UUID> 위임.
+ * DataStore의 IOException은 여기서 IllegalStateException으로 감싼다.
  */
 public final class ResearchRepository implements Repository<ResearchData, UUID> {
 
     private final DataStore<ResearchData, UUID> dataStore;
-    private final Map<UUID, ResearchData> loadedResearch = new ConcurrentHashMap<>();
+    private final Map<UUID, ResearchData> loaded = new ConcurrentHashMap<>();
 
     public ResearchRepository(DataStore<ResearchData, UUID> dataStore) {
         this.dataStore = dataStore;
     }
 
+    // ── Repository 구현 ──
+
+    /** 저장소에서 읽는다. 없으면 null. */
     @Override
-    public ResearchData load(UUID uuid) {
+    public ResearchData load(UUID id) {
         try {
-            return dataStore.load(uuid);
+            return dataStore.load(id);
         } catch (IOException e) {
-            throw new IllegalStateException("ResearchData 로드 실패: " + uuid, e);
+            throw new IllegalStateException("연구 데이터 로드 실패: " + id, e);
         }
-    }
-
-    public ResearchData loadOrCreate(UUID uuid) {
-        ResearchData loaded = loadedResearch.get(uuid);
-
-        if (loaded != null) {
-            return loaded;
-        }
-
-        ResearchData data = load(uuid);
-
-        if (data == null) {
-            data = ResearchData.createNew(uuid);
-        }
-
-        loadedResearch.put(uuid, data);
-
-        return data;
     }
 
     @Override
@@ -52,44 +39,57 @@ public final class ResearchRepository implements Repository<ResearchData, UUID> 
         try {
             dataStore.save(data);
         } catch (IOException e) {
-            throw new IllegalStateException("ResearchData 저장 실패: " + data.getPlayer(), e);
+            throw new IllegalStateException("연구 데이터 저장 실패: " + data.getPlayer(), e);
         }
     }
 
     @Override
-    public boolean exists(UUID uuid) {
-        return dataStore.exists(uuid);
+    public boolean exists(UUID id) {
+        return dataStore.exists(id);
     }
 
     @Override
-    public void delete(UUID uuid) {
+    public void delete(UUID id) {
+        loaded.remove(id);
         try {
-            loadedResearch.remove(uuid);
-            dataStore.delete(uuid);
+            dataStore.delete(id);
         } catch (IOException e) {
-            throw new IllegalStateException("ResearchData 삭제 실패: " + uuid, e);
+            throw new IllegalStateException("연구 데이터 삭제 실패: " + id, e);
         }
     }
 
-    public void saveLoaded(UUID uuid) {
-        ResearchData data = loadedResearch.get(uuid);
+    // ── 캐시 관리 ──
 
+    public ResearchData getLoaded(UUID id) {
+        return loaded.get(id);
+    }
+
+    /** 저장소에서 로드하거나, 없으면 새로 생성해서 캐시에 올린다. */
+    public ResearchData loadOrCreate(UUID player) {
+        return loaded.computeIfAbsent(player, key -> {
+            ResearchData data = load(key);
+            return (data != null) ? data : ResearchData.createNew(key);
+        });
+    }
+
+    public void saveLoaded(UUID id) {
+        ResearchData data = loaded.get(id);
         if (data != null) {
             save(data);
         }
     }
 
     public void saveAllLoaded() {
-        for (ResearchData data : loadedResearch.values()) {
+        for (ResearchData data : loaded.values()) {
             save(data);
         }
     }
 
-    public void unload(UUID uuid) {
-        loadedResearch.remove(uuid);
+    public void unload(UUID id) {
+        loaded.remove(id);
     }
 
     public int getLoadedCount() {
-        return loadedResearch.size();
+        return loaded.size();
     }
 }
