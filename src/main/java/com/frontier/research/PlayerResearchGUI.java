@@ -12,14 +12,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 연구 GUI (27칸).
+ * Tier 1 연구 목록 GUI (27칸).
+ * 현재 목록: crafting_table 하나.
  * - NOT_STARTED: 클릭 시 연구 시작 (30초)
  * - RESEARCHING: 남은 시간 표시
- * - COMPLETED: 완료 표시
+ * - COMPLETED: 완료 메시지
+ * Feature 003B: 뒤로가기(슬롯 22) → 연구소(ResearchLabGUI) 복귀.
  */
 public final class PlayerResearchGUI extends BaseGUI {
 
     private static final int CENTER_SLOT = 13;
+    private static final int BACK_SLOT = 22; // 하단 중앙 (연구 아이콘과 같은 열)
 
     private final ResearchData researchData;
     private final ResearchManager researchManager;
@@ -34,7 +37,6 @@ public final class PlayerResearchGUI extends BaseGUI {
     protected void setup() {
         String id = ResearchManager.RESEARCH_CRAFTING_TABLE;
 
-        // SimpleButton 형식: (버튼 id, 슬롯, 아이콘, (player, event) -> ...)
         addButton(new SimpleButton("research_" + id, CENTER_SLOT, createResearchIcon(id), (player, event) -> {
             switch (researchData.getState(id)) {
                 case NOT_STARTED -> {
@@ -60,6 +62,11 @@ public final class PlayerResearchGUI extends BaseGUI {
                         player.sendMessage(Component.text("이미 완료된 연구입니다.", NamedTextColor.GRAY));
             }
         }));
+
+        // Feature 003B: 뒤로가기 → 연구소 첫 화면
+        addButton(new SimpleButton("research_back", BACK_SLOT, createBackIcon(), (player, event) ->
+                new ResearchLabGUI(researchData, researchManager).open(player)
+        ));
     }
 
     private ItemStack createResearchIcon(String researchId) {
@@ -83,6 +90,15 @@ public final class PlayerResearchGUI extends BaseGUI {
         }
 
         meta.lore(lore);
+        icon.setItemMeta(meta);
+        return icon;
+    }
+
+    private ItemStack createBackIcon() {
+        ItemStack icon = new ItemStack(Material.ARROW);
+        ItemMeta meta = icon.getItemMeta();
+        meta.displayName(Component.text("뒤로가기", NamedTextColor.WHITE));
+        meta.lore(List.of(Component.text("연구소로 돌아갑니다.", NamedTextColor.GRAY)));
         icon.setItemMeta(meta);
         return icon;
     }
