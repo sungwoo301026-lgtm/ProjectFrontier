@@ -1,6 +1,7 @@
 package com.frontier.command;
 
 import com.frontier.base.command.BaseCommand;
+import com.frontier.blueprint.command.BlueprintCommand;
 import com.frontier.command.commands.GuiCommand;
 import com.frontier.command.commands.HelpCommand;
 import com.frontier.command.commands.InfoCommand;
@@ -49,6 +50,7 @@ public final class CommandManager implements Manager, CommandExecutor, TabComple
         registerSubCommand(new GuiCommand(plugin));
         registerSubCommand(new BaseCommand(registry));
         registerSubCommand(new ResearchCommand(registry));
+        registerSubCommand(new BlueprintCommand(registry));
 
         PluginCommand command = plugin.getCommand(ROOT_COMMAND);
         if (command == null) {
