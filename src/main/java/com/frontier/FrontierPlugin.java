@@ -1,12 +1,13 @@
 package com.frontier;
 
 import com.frontier.base.BaseManager;
-import com.frontier.blueprint.BlueprintManager; // ← 추가
+import com.frontier.blueprint.BlueprintManager;
 import com.frontier.command.CommandManager;
 import com.frontier.config.ConfigManager;
 import com.frontier.core.ManagerRegistry;
 import com.frontier.data.DataManager;
 import com.frontier.event.ListenerManager;
+import com.frontier.furniture.FurnitureManager;
 import com.frontier.gui.GUIManager;
 import com.frontier.research.ResearchManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,12 +24,12 @@ public final class FrontierPlugin extends JavaPlugin {
     public void onEnable() {
         registry = new ManagerRegistry(this);
 
-        // ── Manager 등록 (이후 Phase에서 이 블록에만 추가하면 된다) ──
         registry.register(new ConfigManager(this));
         registry.register(new DataManager(this, registry));
         registry.register(new BaseManager(this, registry));
         registry.register(new ResearchManager(this, registry));
-        registry.register(new BlueprintManager(this, registry)); // ← 추가 (Research 이후, Command 이전)
+        registry.register(new BlueprintManager(this, registry));
+        registry.register(new FurnitureManager(this, registry));
         registry.register(new CommandManager(this, registry));
         registry.register(new ListenerManager(this, registry));
         registry.register(new GUIManager(this, registry));
