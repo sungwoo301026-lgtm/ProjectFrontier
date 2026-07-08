@@ -4,6 +4,7 @@ import com.frontier.blueprint.BlueprintManager;
 import com.frontier.blueprint.BlueprintType;
 import com.frontier.gui.BaseGUI;
 import com.frontier.gui.button.SimpleButton;
+import com.frontier.material.MaterialItemFactory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
@@ -12,28 +13,22 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
 
-/**
- * 청사진 제작 GUI (27칸) — Feature 010.
- * 제작대 카테고리 화면의 하위 화면.
- * 현재 목록: 제작대 청사진 하나. (연구 해금이 늘어나면 여기에 추가)
- *
- * 아직 없음: 재료/골드 비용, 제작 시간, 수량 선택 (이후 Feature)
- */
 public final class BlueprintCraftingGUI extends BaseGUI {
 
     private static final int CENTER_SLOT = 13;
     private static final int BACK_SLOT = 22;
 
     private final BlueprintManager blueprintManager;
+    private final MaterialItemFactory materialItemFactory;
 
-    public BlueprintCraftingGUI(BlueprintManager blueprintManager) {
+    public BlueprintCraftingGUI(BlueprintManager blueprintManager, MaterialItemFactory materialItemFactory) {
         super(Component.text("청사진 제작"), 27);
         this.blueprintManager = blueprintManager;
+        this.materialItemFactory = materialItemFactory;
     }
 
     @Override
     protected void setup() {
-        // 제작대 청사진
         addButton(new SimpleButton("craft_blueprint_crafting_table", CENTER_SLOT, createBlueprintIcon(),
                 (player, event) -> {
                     boolean crafted = blueprintManager.craftBlueprint(player, BlueprintType.CRAFTING_TABLE);
@@ -45,10 +40,9 @@ public final class BlueprintCraftingGUI extends BaseGUI {
                 }
         ));
 
-        // 뒤로가기 → 제작대 카테고리 화면
         addButton(new SimpleButton("craft_blueprint_back", BACK_SLOT, createBackIcon(),
                 (player, event) ->
-                        new CraftingTableGUI(blueprintManager).open(player)
+                        new CraftingTableGUI(blueprintManager, materialItemFactory).open(player)
         ));
     }
 

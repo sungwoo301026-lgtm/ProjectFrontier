@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.frontier"
-version = "0.18.0"
+version = "0.19.0"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))

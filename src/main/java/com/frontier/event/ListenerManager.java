@@ -10,6 +10,7 @@ import com.frontier.event.listeners.BlockInteractionListener;
 import com.frontier.event.listeners.PlayerConnectionListener;
 import com.frontier.furniture.FurnitureManager;
 import com.frontier.furniture.listener.FurnitureInteractListener;
+import com.frontier.material.MaterialItemFactory;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -40,12 +41,13 @@ public final class ListenerManager implements Manager {
         DataManager dataManager = registry.get(DataManager.class);
         BlueprintManager blueprintManager = registry.get(BlueprintManager.class);
         FurnitureManager furnitureManager = registry.get(FurnitureManager.class);
+        MaterialItemFactory materialItemFactory = new MaterialItemFactory(plugin);
         Logger logger = plugin.getLogger();
 
         registerListener(new PlayerConnectionListener(dataManager));
         registerListener(new BlockInteractionListener(logger, configManager));
         registerListener(new BlueprintPlaceListener(blueprintManager, furnitureManager));
-        registerListener(new FurnitureInteractListener(furnitureManager, blueprintManager));
+        registerListener(new FurnitureInteractListener(furnitureManager, blueprintManager, materialItemFactory));
     }
 
     @Override
